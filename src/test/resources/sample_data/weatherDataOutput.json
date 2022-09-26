@@ -1,0 +1,20 @@
+{
+"location": "MO,USA",
+"tz": "America/Chicago",
+"datetime": "",
+"currentConditions": {
+  "High Temp": "",
+  "Low Temp": "",
+  "Current temp": 60.7,
+  "Current outlook": "partly-cloudy-day",
+  "sunrise": "2022-09-23T06:57:21-05:00",
+  "sunset": "2022-09-23T19:04:07-05:00",               
+  "wspd": 10.3,
+  "heatindex": null,
+  "humidity": 77.2,
+  "snowdepth": null,
+  "cloudcover": 25.6,
+  "dew": 53.5,
+  "wgust": null,
+  "windchill": null
+}}

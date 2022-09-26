@@ -1,0 +1,20 @@
+{
+  "sampleData": {
+    "bbb3eb7a-364d-40a5-9256-ee4bd6c57663": {
+      "payload": "sample_data/json.json"
+    },
+    "b67cf906-7cd6-4860-b802-b283ba8df7e0": {
+      "payload": "sample_data/list_csv.csv"
+    },
+    "8a378b7e-e11f-414f-b9b1-b3f953277c03": {
+      "payload": "sample_data/json_1.json"
+    },
+    "b0b67f59-e592-4ebe-966b-94c3fc96a762": {
+      "payload": "sample_data/*.dwl"
+    },
+    "354af51a-49b5-434f-a22f-7b5794581ec6": {
+      "payload": "sample_data/list_csv_1.csv",
+      "vars-postalCode": "sample_data/defaultstringtype.dwl"
+    }
+  }
+}
