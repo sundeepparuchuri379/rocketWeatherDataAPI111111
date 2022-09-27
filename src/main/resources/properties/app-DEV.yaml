@@ -1,0 +1,29 @@
+api:
+  id:""
+
+geolocation:
+ api:
+   host: "ip-geolocation.whoisxmlapi.com"
+   port: "443"
+   path: "/api/v1"
+   apiKey: "at_NKAvQJugkoo2m4PgjM8yCOW3yoO4D"
+
+
+weather:
+ api:
+   host: "weather.visualcrossing.com"
+   port: "443"
+   path: "/VisualCrossingWebServices/rest/services/weatherdata/forecast"
+   key: "8YBPKGUNGYSVUNVF46NFUMKMM"
+   aggregateHours: "24"
+   unitGroups: "us"
+   contentType: "json"
+   forecastDays: "1"  
+   
+zipCodeList:
+ api:
+   host: "app.zipcodebase.com"
+   port: "443"
+   path: "/api/v1/code/state"
+   apiKey: "b962d6d0-3da4-11ed-acfd-3d9bc3cb78d6"
+   country: "us"

@@ -2,23 +2,23 @@
 <mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
 http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
     <flow name="rocketweatherapi-main">
-        <http:listener config-ref="rocketweatherapi-httpListenerConfig" path="/v1/rocketcompanies/*">
+        <http:listener config-ref="rocketweatherapi-httpListenerConfig" path="${secure::app.baseUrl}">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
             </http:response>
-            <http:error-response statusCode="#[vars.httpStatus default 500]">
+             <http:error-response statusCode="#[vars.httpStatus default 500]">
                 <http:body><![CDATA[#[payload]]]></http:body>
                 <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
             </http:error-response>
         </http:listener>
         <apikit:router config-ref="rocketweatherapi-config" />
-        <error-handler>
+       <!--  &#45;&#45; <error-handler>
             <on-error-propagate type="APIKIT:BAD_REQUEST">
                 <ee:transform>
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Bad request"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -31,7 +31,7 @@ output application/json
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Resource not found"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -44,7 +44,7 @@ output application/json
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Method not allowed"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -57,7 +57,7 @@ output application/json
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Not acceptable"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -70,7 +70,7 @@ output application/json
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Unsupported media type"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -83,7 +83,7 @@ output application/json
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Not Implemented"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -91,9 +91,9 @@ output application/json
                     </ee:variables>
                 </ee:transform>
             </on-error-propagate>
-        </error-handler>
+        </error-handler> -->
     </flow>
-    <flow name="rocketweatherapi-console">
+   <!--   <flow name="rocketweatherapi-console">
         <http:listener config-ref="rocketweatherapi-httpListenerConfig" path="/console/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
@@ -110,7 +110,7 @@ output application/json
                     <ee:message>
                         <ee:set-payload><![CDATA[%dw 2.0
 output application/json
----
+-&#45;&#45;
 {message: "Resource not found"}]]></ee:set-payload>
                     </ee:message>
                     <ee:variables>
@@ -119,7 +119,7 @@ output application/json
                 </ee:transform>
             </on-error-propagate>
         </error-handler>
-    </flow>
+    </flow> -->
     <flow name="get:\ready:rocketweatherapi-config">
         <ee:transform>
             <ee:message>

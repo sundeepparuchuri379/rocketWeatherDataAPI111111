@@ -1,7 +1,7 @@
 {
   "sampleData": {
     "bbb3eb7a-364d-40a5-9256-ee4bd6c57663": {
-      "payload": "sample_data/json.json"
+      "payload": "sample_data/*_1.dwl"
     },
     "b67cf906-7cd6-4860-b802-b283ba8df7e0": {
       "payload": "sample_data/list_csv.csv"

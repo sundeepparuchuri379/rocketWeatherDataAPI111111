@@ -1,9 +1,17 @@
 %dw 2.0
 
 type auto_e39936f7_97fd_4671_b27b_b86e10bd807c_Output_Attributes = {|
-  statusCode: Number, 
-  reasonPhrase: String, 
-  headers: { _?: String }
-|} {"typeAlias": "HttpResponseAttributes",
-"typeId": "org.mule.extension.http.api.HttpResponseAttributes"}
+  lastModifiedTime?: DateTime {"typeId": "java.time.LocalDateTime"}, 
+  lastAccessTime?: DateTime {"typeId": "java.time.LocalDateTime"}, 
+  size?: Number, 
+  symbolicLink?: Boolean {"typeId": "boolean"}, 
+  statusCode?: Number, 
+  fileName?: String, 
+  creationTime?: DateTime {"typeId": "java.time.LocalDateTime"}, 
+  directory?: Boolean {"typeId": "boolean"}, 
+  regularFile?: Boolean {"typeId": "boolean"}, 
+  path?: String, 
+  reasonPhrase?: String, 
+  headers?: { _?: String }
+|}
 

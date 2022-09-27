@@ -6,18 +6,7 @@
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<http:request-config name="GeoLocation_Request_configuration" doc:name="HTTP Request configuration" doc:id="b6bc0bf4-610d-477f-b635-abe4ce41195b" >
-		<http:request-connection protocol="HTTPS" host="ip-geolocation.whoisxmlapi.com" port="443" />
-	</http:request-config>
-	<http:request-config name="WeatherAPI_Request_configuration" doc:name="HTTP Request configuration" doc:id="5ea83526-ecfd-4b3b-a51b-085bef0b1315" >
-		<http:request-connection protocol="HTTPS" host="weather.visualcrossing.com" port="443" />
-	</http:request-config>
-	<http:request-config name="ZipCodeBase_Request_configuration" doc:name="HTTP Request configuration" doc:id="e7d5149a-3c81-42ce-bbfd-1533dd575dd6" >
-		<http:request-connection protocol="HTTPS" host="app.zipcodebase.com" port="443" />
-	</http:request-config>
-	<file:config name="File_Config" doc:name="File Config" doc:id="c6466c22-bcad-48a6-b7ef-5230cf48b5ee" >
-		<file:connection workingDir="/Users/thishya/Desktop/Sundeep MuleSoft/WorkSpace/rocketweatherapi/src/main/resources/location" />
-	</file:config>
+	
 	<flow name="weatherDataFlow" doc:id="e39936f7-97fd-4671-b27b-b86e10bd807c" >
 		<set-variable value="#[attributes.queryParams.ip]" doc:name="ipAddress" doc:id="eb45b39b-84aa-4359-9432-33b9d0afc21d" variableName="ipAddress"/>
 		<http:request method="GET" doc:name="IP to ZipCode API" doc:id="08b4b831-91b3-4908-a771-fb340245224e" config-ref="GeoLocation_Request_configuration" path="/api/v1">
@@ -58,7 +47,7 @@ output application/json
 payload.zipCodes contains(vars.postalCode)]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="59185d70-6c0a-4677-b635-58ef1f9157b2" message=" &gt;&gt;&gt;&gt;&gt;&gt;  #[vars.postalCode]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="59185d70-6c0a-4677-b635-58ef1f9157b2" message=" &gt;&gt;&gt;&gt;&gt;  #[vars.postalCode]"/>
 		<choice doc:name="Choice" doc:id="1066ef0c-35b2-4d14-8913-91ac2f5469cc" >
 			<when expression="#[vars.locationValid == true]">
 				<http:request method="GET" doc:name="Weather Data API" doc:id="5b514628-24c2-4481-b2f9-d19e805b6ed4" config-ref="WeatherAPI_Request_configuration" path="/VisualCrossingWebServices/rest/services/weatherdata/forecast">
@@ -80,15 +69,17 @@ output application/json
 ---
 payload.locations mapObject ({
 	Location: $.id,
-	"Timezone": $.tz,
-	Datetime: "",
+	"Ip Address": vars.ipAddress,
+	"Postal Code" : vars.postalCode,
+	Timezone: $.tz,
+	Datetime: now() as DateTime as String { format: "yyyy-MM-dd HH:mm:ss"},
 	"Weather Conditions": {
 		"High Temp": $.values.maxt[0],
 		"Low Temp": $.values.mint[0],
 		"Current temp": $.currentConditions.temp,
 		"Current outlook": $.currentConditions.icon,
-		Sunrise: $.currentConditions.sunrise,
-		Sunset: $.currentConditions.sunset,
+		Sunrise: $.currentConditions.sunrise as DateTime as String { format: "yyyy-MM-dd HH:mm:ss"},
+		Sunset: $.currentConditions.sunset as DateTime as String { format: "yyyy-MM-dd HH:mm:ss"},
 		"Wind Speed": $.currentConditions.wspd,
 	    "Heat Index": $.currentConditions.heatindex,
 		Humidity: $.currentConditions.humidity,
@@ -160,6 +151,7 @@ payload.results map{
 			</ee:transform>
 			<file:write doc:name="ZipCodes File" doc:id="01f64dbf-45e9-4c13-96a1-b655dcfb5906" path="ZipCodes.csv" lock="true" mode="APPEND" config-ref="File_Config"/>
 		</foreach>
-		<logger level="INFO" doc:name="Logger" doc:id="1db84f45-ec2d-4215-82c4-a06893d49d00" />
+		<logger level="INFO" doc:name="Logger" doc:id="1db84f45-ec2d-4215-82c4-a06893d49d00" message="&gt;&gt;&gt;&gt;&gt;"/>
+		
 	</flow>
 </mule>
