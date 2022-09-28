@@ -1,3 +1,6 @@
+api:
+  id:"18178259"
+
 geolocation:
  api:
    host: "ip-geolocation.whoisxmlapi.com"

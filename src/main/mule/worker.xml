@@ -7,17 +7,18 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	
-	<flow name="weatherDataFlow" doc:id="e39936f7-97fd-4671-b27b-b86e10bd807c" >
-		<set-variable value="#[attributes.queryParams.ip]" doc:name="ipAddress" doc:id="eb45b39b-84aa-4359-9432-33b9d0afc21d" variableName="ipAddress"/>
-		<http:request method="GET" doc:name="IP to ZipCode API" doc:id="08b4b831-91b3-4908-a771-fb340245224e" config-ref="GeoLocation_Request_configuration" path="/api/v1">
+	<flow name="weatherDataFlow" doc:id="e7666fde-6e0c-44b5-a8bd-769808d22dce" >
+		<set-variable value="#[attributes.queryParams.ipAddress]" doc:name="ipAddress" doc:id="bb67d3f9-d2ee-44f1-853f-c0569de37568" variableName="ipAddress"/>
+		<logger level="INFO" doc:name="Logger" doc:id="9a4af275-93a4-4a24-9188-b4b12255a423" message="#['Request recieved with Ip Address: '++ vars.ipAddress]"/>
+		<http:request method="GET" doc:name="IP to ZipCode API" doc:id="6090a810-eb08-44eb-8492-1848c7421b2b" config-ref="GeoLocation_Request_configuration" path="${secure::geolocation.api.path}">
 			<http:query-params ><![CDATA[#[output application/java
 ---
 {
-	"ipAddress" : attributes.queryParams.ip,
-	"apiKey" : "at_NKAvQJugkoo2m4PgjM8yCOW3yoO4D"
+	"ipAddress" : vars.ipAddress,
+	"apiKey" : p('secure::geolocation.api.apiKey')
 }]]]></http:query-params>
 		</http:request>
-		<ee:transform doc:name="Transform Message" doc:id="c7d87528-f381-4e92-a396-1d747d8c6a5d" >
+		<ee:transform doc:name="Transform Message" doc:id="b5d1864c-c12c-47c8-b706-892d83eb03eb" >
 			<ee:message >
 			</ee:message>
 			<ee:variables >
@@ -35,22 +36,27 @@ output application/java
 payload.location.country]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<set-variable value="#[payload.location.postalCode]" doc:name="postalCode" doc:id="78264d4d-508d-4323-b331-5b078f74e8c8" variableName="postalCode"/>
-		<file:read doc:name="Read" doc:id="f3cba252-06e1-4132-ba73-a004259d5039" path="${app.home}/location/ZipCodes.csv" />
-		<ee:transform doc:name="locationValid" doc:id="354af51a-49b5-434f-a22f-7b5794581ec6">
+		<logger level="INFO" doc:name="Logger" doc:id="556645c4-ac48-427d-ab9f-d28c4a423964" message="#['IP Address is converted to the Postal code:  ' ++ vars.postalCode]" />
+		<file:read doc:name="Read" doc:id="39358280-d03a-4322-b6c4-6abbbebee93f" path="${app.home}/location/ZipCodes.csv" />
+		<ee:transform doc:name="locationValid" doc:id="b83f8b93-5e38-4aec-9a99-b4da0683d042">
 			<ee:message>
 			</ee:message>
 			<ee:variables>
-				<ee:set-variable variableName="locationValid"><![CDATA[%dw 2.0
+				<ee:set-variable variableName="validLocation" ><![CDATA[%dw 2.0
+output application/java
+var state = payload.location distinctBy $
+---
+state contains(vars.location)]]></ee:set-variable>
+				<ee:set-variable variableName="zipCodeAvailable" ><![CDATA[%dw 2.0
 output application/json
 ---
 payload.zipCodes contains(vars.postalCode)]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="59185d70-6c0a-4677-b635-58ef1f9157b2" message=" &gt;&gt;&gt;&gt;&gt;  #[vars.postalCode]"/>
-		<choice doc:name="Choice" doc:id="1066ef0c-35b2-4d14-8913-91ac2f5469cc" >
-			<when expression="#[vars.locationValid == true]">
-				<http:request method="GET" doc:name="Weather Data API" doc:id="5b514628-24c2-4481-b2f9-d19e805b6ed4" config-ref="WeatherAPI_Request_configuration" path="/VisualCrossingWebServices/rest/services/weatherdata/forecast">
+		<logger level="INFO" doc:name="Logger" doc:id="d23e2281-0687-4c8d-99cc-c9010c155706" message="#['ZipCode Available: ' ++ vars.zipCodeAvailable]"/>
+		<choice doc:name="Choice" doc:id="2ff12ebb-5c38-49bf-bbac-15cf9a8e4aa8" >
+			<when expression="#[vars.zipCodeAvailable == true]">
+				<http:request method="GET" doc:name="Weather Data API" doc:id="40ce9813-0c44-43ee-843a-4106d00ab637" config-ref="WeatherAPI_Request_configuration" path="/VisualCrossingWebServices/rest/services/weatherdata/forecast">
 			<http:query-params><![CDATA[#[output application/java
 ---
 {
@@ -62,7 +68,7 @@ payload.zipCodes contains(vars.postalCode)]]></ee:set-variable>
 	"forecastDays" : "1"
 }]]]></http:query-params>
 		</http:request>
-				<ee:transform doc:name="Transform Message" doc:id="bbb3eb7a-364d-40a5-9256-ee4bd6c57663">
+				<ee:transform doc:name="Transform Message" doc:id="c0051352-28e7-497c-a0c6-f84f9d199a6f">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -94,7 +100,7 @@ payload.locations mapObject ({
 		</ee:transform>
 			</when>
 			<otherwise >
-				<ee:transform doc:name="Transform Message" doc:id="652104b7-cf23-4b47-b3f2-44454fe8c781" >
+				<ee:transform doc:name="Transform Message" doc:id="a07e14e1-0281-4677-a205-c86851f4098d" >
 					<ee:message >
 						<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
@@ -109,11 +115,17 @@ output application/json
 				</ee:transform>
 			</otherwise>
 		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="44d6bd1f-e305-4a55-9cae-b18c9658aaaa" message="RocketWeatherAPI processing is Completed "/>
 	</flow>
-	<flow name="LocationZipCode_flow" doc:id="c65e212d-9845-4015-be67-3f82143ca786" >
-		<http:listener doc:name="Listener" doc:id="ce2b1d92-182a-4657-b5e8-299eb61eb3d3" config-ref="rocketweatherapi-httpListenerConfig" path="/locations"/>
-<file:read doc:name="Locations File" doc:id="46e635da-f3c0-4df6-98a9-24adf7c37e80" path="${app.home}/location/Locations.csv" outputMimeType="application/csv"/>
-		<ee:transform doc:name="Transform Message" doc:id="64ba2fcf-1bef-4779-8190-a2153b131f2d" >
+	<flow name="LocationZipCode_flow" doc:id="f33526c2-8830-4422-9eae-64b276b04dff" >
+		<scheduler doc:name="Scheduler" doc:id="a4cbf45c-2fdc-4d11-aec5-7401d16b1250" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="7" timeUnit="DAYS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="a7e34404-f4fe-4f4b-96fd-1ef946a8e0e1" message="Starting Location ZIpCode Flow"/>
+		<file:read doc:name="Locations File" doc:id="3d105ad4-b630-4cc1-94a6-de02df805cdf" path="Locations.csv" outputMimeType="application/csv" config-ref="File_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="3d8dad60-ef90-4518-a41e-1ced9b20a4fe" >
 			<ee:message >
 			</ee:message>
 			<ee:variables >
@@ -123,8 +135,14 @@ output application/json
 payload.State]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<foreach doc:name="For Each" doc:id="9f21f096-ac23-4afd-96a5-6e05617224f6" collection="#[vars.locations]">
-			<http:request method="GET" doc:name="ZipCodes List API" doc:id="5a1bc057-4561-4f31-aad0-3a3c48516dea" config-ref="ZipCodeBase_Request_configuration" path="/api/v1/code/state">
+		<file:delete doc:name="Delete" doc:id="56ec3616-75c8-4d0c-8fe0-a00a25f8b545" config-ref="File_Config1" path="#[p('app.home') ++ '/location/ZipCodes.csv']">
+			<reconnect />
+		</file:delete>
+		<logger level="INFO" doc:name="Logger" doc:id="9006da8a-4862-40e2-8aec-09e44f9a5ec5" message="Deleted Existing ZipCodes File"/>
+		<foreach doc:name="For Each" doc:id="17a9168d-3bba-442e-86c5-949a380f6c6f" collection="#[vars.locations]">
+			<logger level="INFO" doc:name="Logger" doc:id="3f43a60f-12bc-42e4-8afe-df77e70fc00d" message="#['Getting Zip Codes For Location: ' ++ payload]"/>
+			<set-variable value="#[payload]" doc:name="Set Variable" doc:id="bf874e71-a913-4ba0-824d-b0e85d0ddef0" variableName="location_zip"/>
+			<http:request method="GET" doc:name="ZipCodes List API" doc:id="595572e7-dd7b-4d04-b890-11a0e8f96325" config-ref="ZipCodeBase_Request_configuration" path="/api/v1/code/state">
 			<http:query-params><![CDATA[#[output application/java
 ---
 {
@@ -134,13 +152,11 @@ payload.State]]></ee:set-variable>
 }]]]></http:query-params>
 				
 		</http:request>
-			<ee:transform doc:name="Transform Message" doc:id="504ae7c2-b3f1-48b0-8978-9382c7ccb055" >
+			<ee:transform doc:name="Transform Message" doc:id="99497161-e694-4eb1-87d7-0f5b44528718" >
 				<ee:message >
 					<ee:set-payload ><![CDATA[%dw 2.0
 output application/csv header=true
 ---
-
-
 payload.results map{
 	location: payload.query.state,
 	zipCodes: $
@@ -149,9 +165,10 @@ payload.results map{
 ]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
-			<file:write doc:name="ZipCodes File" doc:id="01f64dbf-45e9-4c13-96a1-b655dcfb5906" path="ZipCodes.csv" lock="true" mode="APPEND" config-ref="File_Config"/>
+			<logger level="INFO" doc:name="Logger" doc:id="72f8857b-fe5a-4ac9-ba30-692358a5a738" message="#['Writing to Zip Codes File for Location: ' ++ vars.location_zip]"/>
+			<file:write doc:name="ZipCodes File" doc:id="945bed33-cca9-4fa9-907c-7c317c664b32" path="#[p('app.home') ++ '/location/ZipCodes.csv']" lock="true" config-ref="File_Config1" mode="APPEND"/>
 		</foreach>
-		<logger level="INFO" doc:name="Logger" doc:id="1db84f45-ec2d-4215-82c4-a06893d49d00" message="&gt;&gt;&gt;&gt;&gt;"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4f5a67c8-d71f-418c-aff9-5f4e4a6cb3ba" message="Completed Location ZIpCode Flow"/>
 		
 	</flow>
 </mule>
