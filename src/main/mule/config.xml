@@ -1,22 +1,137 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
-	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
-	xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
-http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	 <apikit:config name="rocketweatherapi-config" api="resource::45656117-6398-48e5-89f4-0bd3f47af371:rocketweatherdataapi:1.0.1:raml:zip:rocketweatherapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	 
+	 
 	 <http:listener-config name="rocketweatherapi-httpListenerConfig">
-        <http:listener-connection host="0.0.0.0" port="8081" protocol="HTTPS">
+        <http:listener-connection host="0.0.0.0" port="8082" protocol="HTTPS">
 			<tls:context >
-				<tls:key-store type="jks" path="certs/server-keystore.jks" keyPassword="mulesoft12345" password="mulesoft12345" alias="mule-server "/>
+				<tls:key-store type="jks" path="${secure::keystore.Path}" keyPassword="${secure::keystore.keyPassword}" password="${secure::keystore.Password}" alias="${secure::keystore.Alias}"/>
 			</tls:context>
 		</http:listener-connection>
     </http:listener-config>
-    <apikit:config name="rocketweatherapi-config" api="resource::8a3921f3-b23b-41bc-928d-bd1ed8e74528:rocketweatherapi:1.0.0:raml:zip:rocketweatherapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+   
+   <configuration doc:name="Configuration" doc:id="e850a3c7-a019-4f97-8884-8fe37cee709e" defaultErrorHandler-ref="ErrorHandler" />
+   
+   <secure-properties:config name="App_Properties_Config" doc:name="Secure Properties Config" doc:id="89ddef71-718b-4617-9141-7f66c877ad94" file="properties/app.yaml" key="rocketCompanies123" />
+   
+   	<secure-properties:config name="Env_Properties_Config" doc:name="Secure Properties Config" doc:id="c0e0e066-262b-4adb-981c-d03e6727536c" file="properties/app-${env}.yaml" key="rocketCompanies123" />
+	
+	<http:request-config name="GeoLocation_Request_configuration" doc:name="HTTP Request configuration" doc:id="b40e67ea-c0e6-4d50-bb8f-9e8f69da3e43" >
+		<http:request-connection protocol="HTTPS" host="${secure::geolocation.api.host}" port="${secure::geolocation.api.port}" />
+	</http:request-config>
+	
+	<http:request-config name="WeatherAPI_Request_configuration" doc:name="HTTP Request configuration" doc:id="78534635-d3a6-4ce3-a5bc-f898af73651a" >
+		<http:request-connection protocol="HTTPS" host="weather.visualcrossing.com" port="443" />
+	</http:request-config>
+	
+	<http:request-config name="ZipCodeBase_Request_configuration" doc:name="HTTP Request configuration" doc:id="2b8bf907-01c1-4d4b-b086-be605e79a0f5" >
+		<http:request-connection protocol="HTTPS" host="app.zipcodebase.com" port="443" />
+	</http:request-config>
+	
+	<file:config name="File_Config" doc:name="File Config" doc:id="22081f95-24b4-4e61-8718-315d59f6444d" >
+		<file:connection workingDir="#[p('app.home') ++ '/' ++ 'location/']" />
+	</file:config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="b26fba04-970e-46ae-9292-a794a08c1842" />
+	
+	  <api-gateway:autodiscovery apiId="${secure::api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="6a39f4e3-a3b0-49d3-94dd-562ca333fdd5" flowRef="rocketweatherapi-main" />
+	
+	<error-handler name="ErrorHandler">
+		<on-error-propagate type="APIKIT:BAD_REQUEST">
+			<ee:transform doc:name="Transform Message" doc:id="f18112e2-82f1-4273-b381-63d52217cc17" >
+				<ee:message >
+					<ee:set-payload resource="dataweaves/apikitnotfound.dwl" />
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>	
+</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_FOUND">
+			<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+				xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="c5488417-636c-49e3-80a7-8ba10b8ade08">
+				<ee:message>
+					<ee:set-payload resource="dataweaves/apikitnotfound.dwl" />
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+			<ee:transform doc:name="Transform Message" doc:id="af29e9cf-0a49-4e3c-a1e5-7127e1ecd633" >
+				<ee:message >
+					<ee:set-payload resource="dataweaves/methodnotallowed.dwl" />
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="httpStatus" ><![CDATA[405]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			
+</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+			<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+				xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="a75c4fa7-74f1-4aff-8d61-138b9d7f74b8">
+				<ee:message>
+					<ee:set-payload resource="dataweaves/apikitnotacceptable.dwl" />
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+			<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+				xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="0862ba06-682e-4260-8108-7662a7fbda7a">
+				<ee:message>
+					<ee:set-payload resource="dataweaves/unsupportedmediatype.dwl" />
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+			<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+				xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="ff540c21-27af-4d6a-9a6a-0ba8356211aa">
+				<ee:message>
+					<ee:set-payload resource="dataweaves/apikitnotimplemented.dwl" />
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="Default Error Propagate" doc:id="ff4b5b1e-d626-480c-a7de-e61541c602a8" type="ANY">
+			<ee:transform doc:name="Transform Message" doc:id="e41a7a61-1360-4399-bed7-750bbde859f0" >
+				<ee:message >
+					<ee:set-payload resource="dataweaves/noneoftheabove.dwl" />
+				</ee:message>
+			</ee:transform>
+
+		</on-error-propagate>
+	</error-handler>
+	</mule>
    
 	
-	</mule>
+
